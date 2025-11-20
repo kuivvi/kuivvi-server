@@ -1,0 +1,60 @@
+# docker-language-server: disable critical_high_vulnerabilities
+FROM node:20
+ENV FORCE_COLOR=1
+
+# Accept variables as ARGs
+ARG DOCKER_ENV
+ARG PORT
+ARG NODE_ENVIRONMENT
+
+ARG POSITIONSTACK_ACCESS_KEY
+# ARG STRIPE_TEST_SECRET_KEY
+# ARG STRIPE_SECRET_KEY
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_KEY
+# ARG RESEND_API_KEY
+ARG SUPABASE_TLS_ENABLED
+# ARG TEST_BIZ_USER_USERNAME
+# ARG TEST_BIZ_USER_PASSWORD
+
+# Store variables as ENVs
+ENV DOCKER_ENV=$DOCKER_ENV
+ENV PORT=$PORT
+ENV NODE_ENVIRONMENT=$NODE_ENVIRONMENT
+# ENV STRIPE_TEST_SECRET_KEY=${STRIPE_TEST_SECRET_KEY}
+# ENV STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+ENV SUPABASE_URL=$SUPABASE_URL
+ENV SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+# ENV RESEND_API_KEY=$RESEND_API_KEY
+ENV SUPABASE_TLS_ENABLED=$SUPABASE_TLS_ENABLED
+# ENV TEST_BIZ_USER_USERNAME=$TEST_BIZ_USER_USERNAME
+# ENV TEST_BIZ_USER_PASSWORD=$TEST_BIZ_USER_PASSWORD
+
+# Set the working directory in the container
+WORKDIR /usr/src/server
+
+# Copy package.json and package-lock.json to the container
+COPY package.json package-lock.json ./
+
+# Install app dependencies using package-lock.json for reproducible builds
+RUN npm ci
+
+# Copy the rest of the application code to the container
+COPY . .
+
+# Install dev sys dependencies and setup build tool.
+WORKDIR /usr/src/server/Docker/Development
+RUN chmod +x -R scripts
+WORKDIR /usr/src/server/Docker/Development/scripts
+RUN ./setupDevEnv.sh
+
+# For coverage reports
+EXPOSE 3000
+
+# Expose the port your application will listen on
+WORKDIR /usr/src/server
+EXPOSE ${PORT}
+
+CMD ["sh", "-c", "chmod +x -R ./Docker && ./Docker/Development/scripts/devEntry.sh"]

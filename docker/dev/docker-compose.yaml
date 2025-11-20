@@ -1,0 +1,14 @@
+services:
+  server:
+    build:
+      context: ../../
+      dockerfile: docker/dev/Dockerfile.dev
+    image: kuivvi-server-image
+    container_name: kuivvi-server-container
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../../.env.local
+    volumes:
+      - ../../:/usr/src/server
+      - /usr/src/server/node_modules
